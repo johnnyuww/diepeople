@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手機快速訂花</title>
+    <style>
+        /* 基礎手機版設定 */
+        body { font-family: sans-serif; background-color: #fdf6f6; margin: 0; padding: 15px; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        
+        h2 { text-align: center; color: #8e5d5d; margin-bottom: 25px; }
+
+        /* 姓名與數量欄位優化 */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="number"] {
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;
+        }
+
+        /* 照片選購區：讓顧客更好點擊 */
+        .flower-option {
+            display: flex; align-items: center; border: 2px solid #eee; border-radius: 12px;
+            padding: 10px; margin-bottom: 12px; cursor: pointer; transition: 0.3s;
+        }
+        .flower-option:has(input:checked) { border-color: #d4a373; background-color: #fff9f0; }
+        
+        .flower-option img { width: 70px; height: 70px; border-radius: 10px; object-fit: cover; margin-right: 15px; }
+        .flower-info { flex-grow: 1; }
+        .flower-name { font-weight: bold; display: block; }
+        .flower-price { color: #d4a373; font-size: 0.9em; }
+
+        /* 送出按鈕：適合大拇指點擊的大小 */
+        .submit-btn {
+            width: 100%; padding: 16px; background: #d4a373; color: white;
+            border: none; border-radius: 50px; font-size: 18px; font-weight: bold;
+            margin-top: 10px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>💐 快速訂花服務</h2>
+    
+    <form action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSfTJ44dJR3_Rj6wKnV1Wa-9JxEMffY2RUgcdIY4OppZgB5NDQ/formResponse">
+        
+        <div class="form-group">
+            <label>您的稱呼</label>
+            <input type="text" name="entry.1785724032" placeholder="請輸入姓名" required>
+        </div>
+
+        <label>挑選喜歡的花款式</label>
+        
+        <label class="flower-option">
+            <img src="https://images.unsplash.com/photo-1548610762-65603791119a?w=200" alt="玫瑰">
+            <div class="flower-info">
+                <span class="flower-name">經典紅玫瑰束</span>
+                <span class="flower-price">$500 / 束</span>
+            </div>
+            <input type="radio" name="entry.1128369303" value="紅玫瑰" checked>
+        </label>
+
+        <label class="flower-option">
+            <img src="https://images.unsplash.com/photo-1597083242741-949174092b77?w=200" alt="向日葵">
+            <div class="flower-info">
+                <span class="flower-name">夏日向日葵束</span>
+                <span class="flower-price">$350 / 束</span>
+            </div>
+            <input type="radio" name="entry.1128369303" value="向日葵">
+        </label>
+
+        <div class="form-group">
+            <label>訂購數量</label>
+            <input type="number" name="entry.1275175133" min="1" value="1">
+        </div>
+
+        <button type="submit" class="submit-btn">確認訂購</button>
+    </form>
+</div>
+
+</body>
+</html>
