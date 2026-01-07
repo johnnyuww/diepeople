@@ -1,83 +1,181 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手機快速訂花</title>
+    <title>專業訃聞親屬紀錄工具 (自動分級版)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* 基礎手機版設定 */
-        body { font-family: sans-serif; background-color: #fdf6f6; margin: 0; padding: 15px; }
-        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        body { font-family: "Microsoft JhengHei", serif; margin: 0; display: flex; height: 100vh; background-color: #2c3e50; color: #fff; }
         
-        h2 { text-align: center; color: #8e5d5d; margin-bottom: 25px; }
+        /* 控制區 */
+        #sidebar { width: 450px; background: #1a1a1a; padding: 20px; overflow-y: auto; border-right: 2px solid #d4a373; }
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; padding: 10px; background: #333; border-radius: 8px; }
+        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 4px; cursor: pointer; background: #444; color: white; font-weight: bold; }
+        .mode-btn.active { background: #d4a373; color: #000; }
 
-        /* 姓名與數量欄位優化 */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="number"] {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;
-        }
-
-        /* 照片選購區：讓顧客更好點擊 */
-        .flower-option {
-            display: flex; align-items: center; border: 2px solid #eee; border-radius: 12px;
-            padding: 10px; margin-bottom: 12px; cursor: pointer; transition: 0.3s;
-        }
-        .flower-option:has(input:checked) { border-color: #d4a373; background-color: #fff9f0; }
+        .category { margin-bottom: 20px; background: #252525; padding: 15px; border-radius: 8px; display: none; }
+        .category.show { display: block; }
+        .category-title { color: #d4a373; font-weight: bold; border-bottom: 1px solid #d4a373; margin-bottom: 10px; padding-bottom: 5px; }
         
-        .flower-option img { width: 70px; height: 70px; border-radius: 10px; object-fit: cover; margin-right: 15px; }
-        .flower-info { flex-grow: 1; }
-        .flower-name { font-weight: bold; display: block; }
-        .flower-price { color: #d4a373; font-size: 0.9em; }
+        .input-row { margin-bottom: 10px; }
+        .input-row.hidden { display: none; }
+        .input-row.show { display: block; }
+        
+        label { display: block; font-size: 12px; color: #aaa; margin-bottom: 3px; }
+        input { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #111; color: #fff; box-sizing: border-box; }
+        
+        .action-area { position: sticky; bottom: 0; background: #1a1a1a; padding: 15px 0; border-top: 1px solid #444; }
+        .btn-pdf { width: 100%; padding: 15px; background: #c0392b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 18px; font-weight: bold; }
 
-        /* 送出按鈕：適合大拇指點擊的大小 */
-        .submit-btn {
-            width: 100%; padding: 16px; background: #d4a373; color: white;
-            border: none; border-radius: 50px; font-size: 18px; font-weight: bold;
-            margin-top: 10px; cursor: pointer;
-        }
+        /* 預覽區 */
+        #preview-pane { flex-grow: 1; padding: 40px; display: flex; justify-content: center; overflow-y: auto; background: #34495e; }
+        #pdf-paper { width: 800px; background: white; padding: 80px; min-height: 1100px; color: black; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .obit-header { text-align: center; font-size: 60px; font-weight: bold; margin-bottom: 20px; letter-spacing: 25px; }
+        .deceased-name { border: 4px double #000; text-align: center; padding: 15px; font-size: 32px; font-weight: bold; margin-bottom: 50px; }
+        .rel-row { display: flex; margin-bottom: 12px; line-height: 1.6; }
+        .rel-label { width: 160px; font-weight: bold; font-size: 20px; border-right: 2px solid #000; margin-right: 20px; flex-shrink: 0; }
+        .rel-names { flex-grow: 1; font-size: 20px; letter-spacing: 2px; }
+        .footer { margin-top: 60px; display: flex; justify-content: space-between; font-weight: bold; font-size: 22px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>💐 快速訂花服務</h2>
-    
-    <form action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSfTJ44dJR3_Rj6wKnV1Wa-9JxEMffY2RUgcdIY4OppZgB5NDQ/formResponse">
-        
-        <div class="form-group">
-            <label>您的稱呼</label>
-            <input type="text" name="entry.1785724032" placeholder="請輸入姓名" required>
+<div id="sidebar">
+    <h2 style="text-align:center; color:#d4a373;">訃聞資料錄入</h2>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="setMode('small')">一般小家族</button>
+        <button class="mode-btn" onclick="setMode('large')">傳統大家族</button>
+    </div>
+
+    <div id="fields-container">
+        <div class="category show">
+            <div class="category-title">亡者與配偶</div>
+            <div class="input-row show"><label>亡者姓名</label><input type="text" id="c_main" value="王大明" oninput="update()"></div>
+            <div class="input-row show"><label>未亡人 (配偶)</label><input type="text" id="c_unwidowed" oninput="update()"></div>
         </div>
 
-        <label>挑選喜歡的花款式</label>
-        
-        <label class="flower-option">
-            <img src="https://images.unsplash.com/photo-1548610762-65603791119a?w=200" alt="玫瑰">
-            <div class="flower-info">
-                <span class="flower-name">經典紅玫瑰束</span>
-                <span class="flower-price">$500 / 束</span>
-            </div>
-            <input type="radio" name="entry.1128369303" value="紅玫瑰" checked>
-        </label>
-
-        <label class="flower-option">
-            <img src="https://images.unsplash.com/photo-1597083242741-949174092b77?w=200" alt="向日葵">
-            <div class="flower-info">
-                <span class="flower-name">夏日向日葵束</span>
-                <span class="flower-price">$350 / 束</span>
-            </div>
-            <input type="radio" name="entry.1128369303" value="向日葵">
-        </label>
-
-        <div class="form-group">
-            <label>訂購數量</label>
-            <input type="number" name="entry.1275175133" min="1" value="1">
+        <div class="category show">
+            <div class="category-title">子女輩</div>
+            <div class="input-row show"><label>孝男</label><input type="text" id="c_son" oninput="update()"></div>
+            <div class="input-row show"><label>孝媳</label><input type="text" id="c_dil" oninput="update()"></div>
+            <div class="input-row show"><label>孝女</label><input type="text" id="c_dau" oninput="update()"></div>
+            <div class="input-row complex"><label>孝女婿</label><input type="text" id="c_sil" oninput="update()"></div>
+            <div class="input-row complex"><label>義子</label><input type="text" id="c_ason" oninput="update()"></div>
+            <div class="input-row complex"><label>義女</label><input type="text" id="c_adau" oninput="update()"></div>
         </div>
 
-        <button type="submit" class="submit-btn">確認訂購</button>
-    </form>
+        <div class="category show">
+            <div class="category-title">孫輩</div>
+            <div class="input-row complex"><label>長孫</label><input type="text" id="c_gson_1" oninput="update()"></div>
+            <div class="input-row complex"><label>長孫媳</label><input type="text" id="c_gdil_1" oninput="update()"></div>
+            <div class="input-row show"><label>孝孫 (內孫)</label><input type="text" id="c_gson" oninput="update()"></div>
+            <div class="input-row complex"><label>孝孫媳</label><input type="text" id="c_gdil" oninput="update()"></div>
+            <div class="input-row show"><label>孝孫女 (內孫女)</label><input type="text" id="c_gdau" oninput="update()"></div>
+            <div class="input-row complex"><label>孝孫婿</label><input type="text" id="c_gsil" oninput="update()"></div>
+            <div class="input-row show"><label>孝外孫</label><input type="text" id="c_ogson" oninput="update()"></div>
+            <div class="input-row complex"><label>孝外孫媳</label><input type="text" id="c_ogdil" oninput="update()"></div>
+            <div class="input-row show"><label>孝外孫女</label><input type="text" id="c_ogdau" oninput="update()"></div>
+            <div class="input-row complex"><label>孝外孫婿</label><input type="text" id="c_ogsil" oninput="update()"></div>
+        </div>
+
+        <div class="category complex">
+            <div class="category-title">曾孫與平輩晚輩</div>
+            <div class="input-row complex"><label>孝曾孫/女</label><input type="text" id="c_ggson" oninput="update()"></div>
+            <div class="input-row complex"><label>孝外曾孫/女</label><input type="text" id="c_oggson" oninput="update()"></div>
+            <div class="input-row show"><label>胞兄弟姊妹</label><input type="text" id="c_sibs" oninput="update()"></div>
+            <div class="input-row complex"><label>胞弟媳/姊夫/妹婿</label><input type="text" id="c_sib_inlaw" oninput="update()"></div>
+            <div class="input-row complex"><label>胞姪/姪媳/姪女/姪婿</label><input type="text" id="c_nephews" oninput="update()"></div>
+            <div class="input-row complex"><label>胞姪孫/女</label><input type="text" id="c_gnephews" oninput="update()"></div>
+        </div>
+    </div>
+
+    <div class="action-area">
+        <button class="btn-pdf" onclick="exportPDF()">產生並下載 PDF 檔案</button>
+    </div>
 </div>
+
+<div id="preview-pane">
+    <div id="pdf-paper">
+        <div class="obit-header">聞</div>
+        <div class="deceased-name" id="out_main">亡者：王大明</div>
+        <div id="out_list"></div>
+        <div class="footer"><span>啟</span><span>泣</span><span>同</span></div>
+    </div>
+</div>
+
+<script>
+    let currentMode = 'small';
+
+    function setMode(mode) {
+        currentMode = mode;
+        const btns = document.querySelectorAll('.mode-btn');
+        btns.forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        const complexItems = document.querySelectorAll('.complex');
+        complexItems.forEach(item => {
+            item.style.display = (mode === 'large') ? 'block' : 'none';
+        });
+        update();
+    }
+
+    function update() {
+        const fields = [
+            { l: "未亡人", i: "c_unwidowed" },
+            { l: "孝　　男", i: "c_son" },
+            { l: "孝　　媳", i: "c_dil" },
+            { l: "孝　　女", i: "c_dau" },
+            { l: "孝  女  婿", i: "c_sil" },
+            { l: "義  子  女", i: "c_ason" },
+            { l: "長　　孫", i: "c_gson_1" },
+            { l: "長  孫  媳", i: "c_gdil_1" },
+            { l: "孝　　孫", i: "c_gson" },
+            { l: "孝  孫  媳", i: "c_gdil" },
+            { l: "孝  孫  女", i: "c_gdau" },
+            { l: "孝  孫  婿", i: "c_gsil" },
+            { l: "孝  外  孫", i: "c_ogson" },
+            { l: "孝外孫媳", i: "c_ogdil" },
+            { l: "孝外孫女", i: "c_ogdau" },
+            { l: "孝外孫婿", i: "c_ogsil" },
+            { l: "孝  曾  孫", i: "c_ggson" },
+            { l: "孝外曾孫", i: "c_oggson" },
+            { l: "胞兄弟姊妹", i: "c_sibs" },
+            { l: "姻親平輩", i: "c_sib_inlaw" },
+            { l: "胞  姪  輩", i: "c_nephews" },
+            { l: "胞姪孫輩", i: "c_gnephews" }
+        ];
+
+        document.getElementById('out_main').innerText = "故者：" + document.getElementById('c_main').value;
+        let html = "";
+        fields.forEach(f => {
+            let el = document.getElementById(f.i);
+            // 只有在當前模式下該欄位被填寫，才顯示在 PDF 預覽中
+            if (el && el.value.trim() !== "") {
+                html += `<div class="rel-row">
+                    <div class="rel-label">${f.l}</div>
+                    <div class="rel-names">${el.value.replace(/[,，]/g, "　　")}</div>
+                </div>`;
+            }
+        });
+        document.getElementById('out_list').innerHTML = html;
+    }
+
+    async function exportPDF() {
+        const area = document.getElementById('pdf-paper');
+        const canvas = await html2canvas(area, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+        const w = pdf.internal.pageSize.getWidth();
+        const h = (canvas.height * w) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, w, h);
+        pdf.save(`親屬表_${document.getElementById('c_main').value}.pdf`);
+    }
+
+    // 初始化模式
+    setMode('small');
+</script>
 
 </body>
 </html>
